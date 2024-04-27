@@ -3,11 +3,12 @@ import {Dep, createDep} from './dep';
 // key: リアクティブにしたいオブジェクト(=target)
 // value:実行したい作用(関数) (=Dep)
 type Target = any;
+type TargetKey = any;
 type KeyToDepMap =  Map<Target, Dep>;
 
 // これはグローバル変数
 // key: target, value:dep
-const targetMap =  new WeakMap<Target, KeyToDepMap>();
+const targetMap =  new WeakMap<TargetKey, KeyToDepMap>();
 
 export let activeEffect: ReactiveEffect | undefined;
 export class ReactiveEffect<T = any> {
