@@ -1,5 +1,6 @@
 import {RendererOptions} from '../runtime-core';
 import {patchEvent}  from './modules/evnets';
+import {patchAttr}  from './modules/attrs';
 
 type DOMRenderOptions = RendererOptions<Node, Element>
 
@@ -11,6 +12,6 @@ export const patchProp: DOMRenderOptions['patchProp'] = (el, key, value) => {
   if(isOn(key)){
     patchEvent(el, key ,value);
   } else {
-    // patchAttr(el, key ,value);
+    patchAttr(el, key ,value);
   }
 }
