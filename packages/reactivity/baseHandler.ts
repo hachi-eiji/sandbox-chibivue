@@ -2,6 +2,10 @@ import {track, trigger} from './effect';
 import {reactive} from './reactive';
 
 export const mutableHandlers: ProxyHandler<object> = {
+  // target: 対象のオブジェクト
+  // key: プロパティ名
+  // receiver: Proxyまたはプロキシから継承するオブジェクト
+  //https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy/get
   get(target: object, key: string | symbol, receiver: object){
     track(target, key);
 

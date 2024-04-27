@@ -1,8 +1,8 @@
 import {Dep, createDep} from './dep';
 
-type Target = any;
 // key: リアクティブにしたいオブジェクト(=target)
 // value:実行したい作用(関数) (=Dep)
+type Target = any;
 type KeyToDepMap =  Map<Target, Dep>;
 
 // これはグローバル変数
@@ -13,6 +13,9 @@ export let activeEffect: ReactiveEffect | undefined;
 export class ReactiveEffect<T = any> {
   constructor(public fn: () => T) {}
 
+  // ここはcreateAppAPIとtriggerの2カ所から呼ばれている
+  // 前者はコンポーネントを作成している途中でreactiveが呼ばれているので
+  // activeEffectに自分自身が入って、その結果をtrackで使う
   run() {
     // fnを実行する前のactiveEffectを保持して、実行したら元に戻す
     // 上書きして意図しない挙動をする
