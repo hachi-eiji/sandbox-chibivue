@@ -1,8 +1,12 @@
-import {createApp} from 'chibivue'
+import {createApp, h} from 'chibivue'
 
 const app = createApp({
   render() {
-    return 'hello world';
+    return h('div', {}, [
+      h('p', {} ,['Hello world']),
+      h('button', {} ,['click'])
+    ]
+    );
   }
 })
 app.mount('#app')
