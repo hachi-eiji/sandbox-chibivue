@@ -4,7 +4,11 @@ const app = createApp({
   render() {
     return h('div', {}, [
       h('p', {} ,['Hello world']),
-      h('button', {} ,['click'])
+      h('button', {
+        onClick() {
+          alert('hello')
+        }
+      } ,['click'])
     ]
     );
   }
