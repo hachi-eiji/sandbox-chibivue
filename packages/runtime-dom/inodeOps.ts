@@ -3,7 +3,6 @@ import {RendererOptions} from '../runtime-core';
 export const nodeOps: Omit<RendererOptions, 'patchProp'> = {
   createElement: tagName => {
     return document.createElement(tagName);
-
   },
 
   createText:(text:string) => {
