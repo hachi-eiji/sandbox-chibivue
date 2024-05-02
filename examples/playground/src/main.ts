@@ -16,9 +16,12 @@ const CounterComponent = {
 const MyComponent = {
   props: {someMessage: {type: String}},
 
-  setup(props: {someMessage: string}){
+  setup(props: {someMessage: string}, {emit}: any){
     return () =>
-      h('div', {id: 'my-app'}, [`message: ${props.someMessage}`])
+      h('div', {}, [
+        h('p', {}, [`someMessage: ${props.someMessage}`]),
+        h('button', {onClick: () => emit('click:change-message')}, ['change mesage']),
+      ])
   }
 }
 
@@ -35,8 +38,10 @@ const app = createApp({
         h(CounterComponent, {}, []),
         h(CounterComponent, {}, []),
         h(CounterComponent, {}, []),
-        h(MyComponent, { 'some-message': state.message }, []),
-        h('button', {onClick: changeMessage}, ['change message'])
+        h(MyComponent, {
+          'some-message': state.message,
+          'onClick:change-message': changeMessage
+        }, []),
       ]);
   }
 })

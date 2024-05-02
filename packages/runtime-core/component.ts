@@ -2,6 +2,7 @@ import { ReactiveEffect } from '../reactivity'
 import { ComponentOptions } from './componentOptions'
 import { VNode, VNodeChild } from './vnode'
 import {Props} from './componentProps'
+import { emit } from "./componentEmits";
 
 export type Component = ComponentOptions
 export type Data = Record<string, unknown>;
@@ -21,6 +22,7 @@ export interface ComponentInternalInstance {
   isMounted: boolean
   propsOptions: Props
   props: Data
+  emit: (event: string, ...args: any[]) => void
 }
 
 export function createComponentInstance(
@@ -39,6 +41,8 @@ export function createComponentInstance(
     isMounted: false,
     propsOptions: type.props || {},
     props: {},
+    emit: null!,
   }
+  instance.emit = emit.bind(null, instance);
   return instance;
 }
