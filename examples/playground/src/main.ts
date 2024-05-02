@@ -14,11 +14,11 @@ const CounterComponent = {
 }
 
 const MyComponent = {
-  props: {message: {type: String}},
+  props: {someMessage: {type: String}},
 
-  setup(props: {message: string}){
+  setup(props: {someMessage: string}){
     return () =>
-      h('div', {id: 'my-app'}, [`message: ${props.message}`])
+      h('div', {id: 'my-app'}, [`message: ${props.someMessage}`])
   }
 }
 
@@ -35,7 +35,7 @@ const app = createApp({
         h(CounterComponent, {}, []),
         h(CounterComponent, {}, []),
         h(CounterComponent, {}, []),
-        h(MyComponent, { message: state.message }, []),
+        h(MyComponent, { 'some-message': state.message }, []),
         h('button', {onClick: changeMessage}, ['change message'])
       ]);
   }
