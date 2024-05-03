@@ -1,6 +1,5 @@
 import {Component}  from './component';
 import {RootRenderFunction} from './renderer';
-import {ReactiveEffect} from '../reactivity';
 
 export interface App<HostElement = any> {
   mount(rootContainer: HostElement | string): void

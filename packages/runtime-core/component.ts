@@ -66,6 +66,7 @@ export const setupComponent = (instance: ComponentInternalInstance) => {
     ) as InternalRenderFunction;
   }
 
+
   if(compile && !component.render) {
     const template = component.template ?? '';
     if(template){
