@@ -1,7 +1,7 @@
 import { VNode, Text, normalizeVNode, createVNode } from './vnode'
-import { Component, ComponentInternalInstance, createComponentInstance,InternalRenderFunction } from './component'
+import { Component, ComponentInternalInstance, createComponentInstance, setupComponent } from './component'
 import { ReactiveEffect } from '../reactivity';
-import { initProps, updateProps } from './componentProps';
+import { updateProps } from './componentProps';
 
 export interface RendererOptions<
   HostNode = RendererNode,
@@ -120,17 +120,7 @@ export function createRenderer(options: RendererOptions){
   ) => {
     const instance: ComponentInternalInstance = (initialVNode.component = createComponentInstance(initialVNode));
 
-    const {props} = instance.vnode;
-    initProps(instance, props);
-
-    const component = initialVNode.type as Component;
-    if(component.setup){
-      instance.render = component.setup(
-        instance.props,
-        {emit: instance.emit}
-      ) as InternalRenderFunction;
-    }
-
+    setupComponent(instance)
     setupRenderEffect(instance,  initialVNode, container)
   };
 

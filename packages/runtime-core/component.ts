@@ -1,11 +1,18 @@
 import { ReactiveEffect } from '../reactivity'
 import { ComponentOptions } from './componentOptions'
 import { VNode, VNodeChild } from './vnode'
-import {Props} from './componentProps'
+import {Props,initProps} from './componentProps'
 import { emit } from "./componentEmits";
 
 export type Component = ComponentOptions
 export type Data = Record<string, unknown>;
+
+type CompileFUnction = (template: string) => InternalRenderFunction;
+let compile: CompileFUnction | undefined;
+
+export function registerRuntimeCompiler(_compile: any){
+  compile = _compile;
+}
 
 export type InternalRenderFunction = {
   (): VNodeChild
@@ -45,4 +52,24 @@ export function createComponentInstance(
   }
   instance.emit = emit.bind(null, instance);
   return instance;
+}
+
+export const setupComponent = (instance: ComponentInternalInstance) => {
+  const {props} = instance.vnode;
+  initProps(instance, props);
+
+  const component = instance.type as Component;
+  if(component.setup){
+    instance.render = component.setup(
+      instance.props,
+      {emit: instance.emit}
+    ) as InternalRenderFunction;
+  }
+
+  if(compile && !component.render) {
+    const template = component.template ?? '';
+    if(template){
+      instance.render = compile(template)
+    }
+  }
 }
