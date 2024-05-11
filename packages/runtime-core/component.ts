@@ -7,15 +7,15 @@ import { emit } from "./componentEmits";
 export type Component = ComponentOptions
 export type Data = Record<string, unknown>;
 
-type CompileFUnction = (template: string) => InternalRenderFunction;
-let compile: CompileFUnction | undefined;
+type CompileFunction = (template: string) => InternalRenderFunction;
+let compile: CompileFunction | undefined;
 
 export function registerRuntimeCompiler(_compile: any){
   compile = _compile;
 }
 
 export type InternalRenderFunction = {
-  (): VNodeChild
+  (ctx: Data): VNodeChild
 }
 
 export interface ComponentInternalInstance {
@@ -30,6 +30,7 @@ export interface ComponentInternalInstance {
   propsOptions: Props
   props: Data
   emit: (event: string, ...args: any[]) => void
+  setupState: Data // setupの結果はオブジェクトの場合はここに格納することにする
 }
 
 export function createComponentInstance(
@@ -49,6 +50,7 @@ export function createComponentInstance(
     propsOptions: type.props || {},
     props: {},
     emit: null!,
+    setupState: {}
   }
   instance.emit = emit.bind(null, instance);
   return instance;
@@ -60,10 +62,16 @@ export const setupComponent = (instance: ComponentInternalInstance) => {
 
   const component = instance.type as Component;
   if(component.setup){
-    instance.render = component.setup(
+    const setupResult = component.setup(
       instance.props,
       {emit: instance.emit}
     ) as InternalRenderFunction;
+
+    if (typeof setupResult === 'function'){
+      instance.render = setupResult
+    } else if(typeof setupResult === 'object' && setupResult !== null){
+      instance.setupState = setupResult
+    }
   }
 
 

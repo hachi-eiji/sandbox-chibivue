@@ -1,4 +1,4 @@
-import { ElementNode, NodeTypes, TemplateChildNode, TextNode, Position, SourceLocation, AttributeNode } from "./ast";
+import { ElementNode, NodeTypes, TemplateChildNode, TextNode, Position, SourceLocation, AttributeNode, InterpolationNode, DirectiveNode } from "./ast";
 
 export interface ParserContext {
   readonly originalSource: string
@@ -45,9 +45,11 @@ function parseChildren(
 
   while(!isEnd(context, ancestors)){
     const s = context.source
-    let node: TemplateChildNode|undefined = undefined;
+    let node: TemplateChildNode | undefined = undefined;
 
-    if(s[0] === '<'){
+    if(startsWith(s, "{{")){
+      node = parseInterpolation(context)
+    } else if(s[0] === '<'){
       if(/[a-z]/i.test(s[1])){
         node = parseElement(context, ancestors)
       }
@@ -104,11 +106,14 @@ function startsWithEndTagOpen(source: string, tag:string):boolean {
 }
 
 function parseText(context: ParserContext): TextNode {
-  const endToken = '<'
+  const endTokens = ['<','{{']
   let endIndex = context.source.length;
-  const index = context.source.indexOf(endToken, 1)
-  if(index !== -1 && endIndex > index){
-    endIndex = index
+
+  for(let i = 0; i < endTokens.length; i++){
+    const index = context.source.indexOf(endTokens[i], 1)
+    if(index !== -1 && endIndex > index){
+      endIndex = index
+    }
   }
 
   const start = getCursor(context)
@@ -149,6 +154,40 @@ function parseElement(
   return element
 }
 
+function parseInterpolation(
+  context: ParserContext
+): InterpolationNode | undefined{
+  const [open, close] = ['{{', '}}']
+  const closeIndex = context.source.indexOf(close, open.length)
+  if(closeIndex === -1) return undefined
+
+  const start = getCursor(context)
+  advanceBy(context, open.length)
+
+  const innerStart = getCursor(context)
+  const innerEnd = getCursor(context)
+  const rawContentLength = closeIndex - open.length
+  const rawContent = context.source.slice(0, rawContentLength)
+  const preTrimContent = parseTextData(context, rawContentLength)
+
+  const content = preTrimContent.trim()
+  const startOffset = preTrimContent.indexOf(content)
+
+  if(startOffset > 0) {
+    advancePositionWithMutation(innerStart, rawContent, startOffset)
+  }
+
+  const endOffset = rawContentLength - (preTrimContent.length-content.length-startOffset)
+  advancePositionWithMutation(innerEnd, rawContent,  endOffset)
+  advanceBy(context, close.length)
+
+  return {
+    type: NodeTypes.INTERPOLATION,
+    content,
+    loc: getSelection(context, start),
+  }
+}
+
 function parseTag(
   context: ParserContext,
   type: TagType,
@@ -178,7 +217,7 @@ function parseTag(
 function parseAttributes(
   context: ParserContext,
   type: TagType
-): AttributeNode[] {
+): (AttributeNode | DirectiveNode)[] {
   const props = []
   const attributeNames = new Set<string>();
 
@@ -203,7 +242,7 @@ type AttributeValue =
 function parseAttribute(
   context: ParserContext,
   nameSet: Set<string>
-): AttributeNode {
+): AttributeNode | DirectiveNode {
   const start = getCursor(context)
   const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
   const name = match[0]
@@ -221,6 +260,23 @@ function parseAttribute(
   }
 
   const loc = getSelection(context, start)
+
+  // directive
+  if (/^(v-[A-Za-z0-9-]|@)/.test(name)){
+    const match = /(?:^v-([a-z0-9-]+))?(?:(?::|^\.|^@|^#)(\[[^\]]+\]|[^\.]+))?(.+)?$/i.exec(name)!;
+    let dirName = match[1] || (startsWith(name, "@") ? "on" : "")
+    let arg = ""
+
+    if(match[2]) arg = match[2]
+
+      return {
+        type: NodeTypes.DIRECTIVE,
+        name: dirName,
+        exp: value?.content ?? "",
+        loc,
+        arg,
+      }
+  }
 
   return {
     type: NodeTypes.ATTRIBUTE,
